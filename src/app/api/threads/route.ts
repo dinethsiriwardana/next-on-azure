@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     `);
 
     return NextResponse.json(
-      { thread: rows[0] },
+      { thread: (rows as any)[0] },
       { status: 201 }
     );
   } catch (error) {
