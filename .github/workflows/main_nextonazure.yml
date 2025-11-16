@@ -29,11 +29,19 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
+      - name: Copy standalone build
+        run: |
+          cp -r .next/standalone ./deploy
+          cp -r .next/static ./deploy/.next/static
+          cp -r public ./deploy/public || true
+          cp package.json ./deploy/package.json
+          cp startup.sh ./deploy/startup.sh
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ./deploy
 
   deploy:
     runs-on: ubuntu-latest
