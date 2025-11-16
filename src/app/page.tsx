@@ -1,4 +1,16 @@
+'use client';
+
+import { useState } from 'react';
+import ThreadForm from '@/components/ThreadForm';
+import ThreadList from '@/components/ThreadList';
+
 export default function Home() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleThreadCreated = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className="font-sans min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900">
       {/* Header */}
@@ -69,12 +81,24 @@ export default function Home() {
            
           </div>
         </div>
-
-  
-
-
       </main>
 
+      {/* Threads Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="mb-12 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Community Threads</h2>
+          <p className="text-gray-600 dark:text-gray-400">Share your thoughts and connect with others</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <ThreadForm onThreadCreated={handleThreadCreated} />
+          </div>
+          <div>
+            <ThreadList refresh={refreshKey} />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
