@@ -1,31 +1,28 @@
-import sql from 'mssql';
+import mysql from 'mysql2/promise';
 
-const config: sql.config = {
-  server: process.env.DB_SERVER || 'localhost',
+const config = {
+  host: process.env.DB_SERVER || 'localhost',
   database: process.env.DB_DATABASE || 'ThreadsDB',
-  user: process.env.DB_USER || 'sa',
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  port: parseInt(process.env.DB_PORT || '1433'),
-  options: {
-    encrypt: process.env.DB_ENCRYPT === 'true',
-    trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
-  },
+  port: parseInt(process.env.DB_PORT || '3306'),
+  ssl: process.env.DB_ENCRYPT === 'true' ? { rejectUnauthorized: false } : undefined,
 };
 
-let pool: sql.ConnectionPool | null = null;
+let pool: mysql.Pool | null = null;
 
-export async function getPool(): Promise<sql.ConnectionPool> {
+export async function getPool(): Promise<mysql.Pool> {
   if (!pool) {
-    pool = await sql.connect(config);
+    pool = mysql.createPool(config);
   }
   return pool;
 }
 
 export async function closePool(): Promise<void> {
   if (pool) {
-    await pool.close();
+    await pool.end();
     pool = null;
   }
 }
 
-export { sql };
+export { mysql };

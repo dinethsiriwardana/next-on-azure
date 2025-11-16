@@ -1,16 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool, sql } from '@/lib/db';
+import { getPool } from '@/lib/db';
 
 export async function GET() {
   try {
     const pool = await getPool();
-    const result = await pool.request().query(`
+    
+    // Create table if not exists
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS threads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        author VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    
+    const [rows] = await pool.execute(`
       SELECT id, title, content, author, created_at, updated_at
-      FROM Threads
+      FROM threads
       ORDER BY created_at DESC
     `);
     
-    return NextResponse.json({ threads: result.recordset }, { status: 200 });
+    return NextResponse.json({ threads: rows }, { status: 200 });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
@@ -33,19 +46,19 @@ export async function POST(request: NextRequest) {
     }
 
     const pool = await getPool();
-    const result = await pool
-      .request()
-      .input('title', sql.NVarChar(255), title)
-      .input('content', sql.NVarChar(sql.MAX), content)
-      .input('author', sql.NVarChar(100), author)
-      .query(`
-        INSERT INTO Threads (title, content, author, created_at, updated_at)
-        OUTPUT INSERTED.*
-        VALUES (@title, @content, @author, GETDATE(), GETDATE())
-      `);
+    await pool.execute(`
+      INSERT INTO threads (title, content, author, created_at, updated_at)
+      VALUES (?, ?, ?, NOW(), NOW())
+    `, [title, content, author]);
+
+    const [rows] = await pool.execute(`
+      SELECT id, title, content, author, created_at, updated_at
+      FROM threads
+      WHERE id = LAST_INSERT_ID()
+    `);
 
     return NextResponse.json(
-      { thread: result.recordset[0] },
+      { thread: rows[0] },
       { status: 201 }
     );
   } catch (error) {
